@@ -6,6 +6,6 @@ To run it, copy the repository into a web server folder (such as Apache) and run
 
 Move the player with the arrows!
 
-Jump over the enemies to kill them!
+Jump on top of the enemies to kill them!
 
-And GET THE MOTHERFUCKING TOWER.
+And GET THE MOTHERFUCKING TOWER!!
