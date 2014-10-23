@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src='lib/quintus.js'></script>
+        <script src='lib/quintus_sprites.js'></script>
+        <script src='lib/quintus_scenes.js'></script>
+        <script src='lib/quintus_input.js'></script>
+        <script src='lib/quintus_anim.js'></script>
+        <script src='lib/quintus_2d.js'></script>
+        <script src='lib/quintus_touch.js'></script>
+        <script src='lib/quintus_ui.js'></script>
+    </head>
+    <body style="background-color: black;">
+        <script>
+            var Q = Quintus()
+                .include("Sprites, Scenes, Input, 2D, Touch, UI")
+                .setup({
+                    maximize: true,
+                    scaleToFit: true
+                }).controls().touch(); 
+
+            //Class player
+            Q.Sprite.extend("Player",{
+                init: function(p) {
+                    this._super(p, { asset: "player.png"});
+                    this.add('2d, platformerControls'); 
+
+                    this.on("hit.sprite",function(collision) {
+                         // Check the collision, if it's the tower, you win!
+                            if(collision.obj.isA("Tower")) {
+                                // Stage the endGame scene above the current stage
+                                Q.stageScene("toLevel2",1, { label: "You won!" }); 
+                                // Remove the player to prevent them from moving
+                                this.destroy();
+
+                            }
+                            if(collision.obj.isA("TowerPurple")) {
+                                // Stage the endGame scene above the current stage
+                                Q.stageScene("toLevel3",1, { label: "You won" }); 
+                                // Remove the player to prevent them from moving
+                                this.destroy();
+
+                            }
+                    });    
+                }
+            });
+
+            
+            //Class Enemy
+            Q.Sprite.extend("Enemy", {
+                 init: function(p) {
+                     this._super(p, {asset: "enemy.png", vx: 100, visibleonly: true});
+                     this.add('2d, aiBounce');
+                     //It listens left, right and bottom collisions. If the collision is with a player, the game ends. 
+                     this.on("bump.left,bump.right,bump.bottom",function(collision) {
+                            if(collision.obj.isA("Player")) { 
+                                Q.stageScene("endGame",1, { label: "You have died :( " }); 
+                                collision.obj.destroy();
+                            }
+                     });
+                        //If the player jumps on the enemy, it kills him and the player gets a little jump
+                     this.on("bump.top",function(collision) {
+                           if(collision.obj.isA("Player")) { 
+                                this.destroy();
+                                collision.obj.p.vy = -300;
+                            }
+                     });
+                 }
+            });
+            
+            //The towers
+            Q.Sprite.extend("Tower", {
+                init: function(p) {
+                    this._super(p, {asset: "tower.png"});
+                }
+            });
+
+            Q.Sprite.extend("TowerPurple", {
+                init: function(p) {
+                    this._super(p, {asset: "towerPurple.png"});
+                }
+            });
+
+            Q.Sprite.extend("TowerRed", {
+                init: function(p) {
+                    this._super(p, {asset: "towerRed.png"});
+                }
+            });
+
+
+            //load assets and staging first level
+            Q.load("tiles.png, player.png, enemy.png, tower.png, towerPurple.png, towerRed.png, level1.tmx, level2.tmx, level3.tmx", function() {
+                Q.sheet("tiles","tiles.png", { tilew: 32, tileh: 32});          
+                Q.stageScene("level1");
+            });
+
+            //LEVEL 1
+            Q.scene("level1",function(stage) {          
+                var background = new Q.TileLayer({ dataAsset: 'level1.tmx', layerIndex: 0, sheet: 'tiles', tileW: 32, tileH: 32, type: Q.SPRITE_NONE });
+                stage.insert(background);   
+                stage.collisionLayer(new Q.TileLayer({ dataAsset: 'level1.tmx', layerIndex:1,  sheet: 'tiles', tileW: 32, tileH: 32 })); 
+
+                var player = stage.insert(new Q.Player({x: 285, y: 232}));
+                stage.add("viewport").follow(background);
+
+                stage.insert(new Q.Enemy({ x: 484, y: 253 }));
+                stage.insert(new Q.Enemy({ x: 705, y: 253 }));
+                
+                stage.insert(new Q.Tower({ x: 54, y: 49}));
+            });
+
+            //To display a "Go to level 2" to going to level 2
+            Q.scene('toLevel2',function(stage) {
+                var container = stage.insert(new Q.UI.Container({
+                    x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"
+                }));
+
+                var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",
+                                                  label: "Go to Level 2" }))         
+                var label = container.insert(new Q.UI.Text({x:10, y: -10 - button.p.h, 
+                                                   label: stage.options.label }));
+                // When the button is clicked, clear all the stages
+                // and restart the game.
+                button.on("click",function() {
+                    Q.clearStages();
+                    Q.stageScene('level2');
+                });
+  
+                // Expand the container to visibily fit it's contents
+                container.fit(20);
+            });
+
+
+            //LEVEL 2
+            Q.scene("level2", function(stage) {
+                var background = new Q.TileLayer( {dataAsset: 'level2.tmx', layerIndex: 0, sheet: 'tiles', tileW: 32, tileH: 32, type: Q.SPRITE_NONE });
+                stage.insert(background);
+                stage.collisionLayer(new Q.TileLayer({ dataAsset: 'level2.tmx', layerIndex: 1, sheet: 'tiles', tileW: 32, tileH: 32 }));
+
+                var player = stage.insert(new Q.Player({ x: 159, y: 1025}));
+                stage.add("viewport").follow(player);
+
+                stage.insert(new Q.Enemy({ x: 47, y: 1087 }));
+                stage.insert(new Q.Enemy({ x: 47, y: 1087 }));
+                stage.insert(new Q.Enemy({ x: 47, y: 1087 }));
+                stage.insert(new Q.Enemy({ x: 47, y: 1087 }));
+                stage.insert(new Q.Enemy({ x: 47, y: 1087 }));
+                stage.insert(new Q.Enemy({ x: 268, y: 1091 }));
+                stage.insert(new Q.Enemy({ x: 268, y: 1091 }));
+                stage.insert(new Q.Enemy({ x: 268, y: 1091 }));
+                stage.insert(new Q.Enemy({ x: 268, y: 1091 }));
+                stage.insert(new Q.Enemy({ x: 268, y: 1091 }));
+
+                stage.insert(new Q.Enemy({ x: 86, y: 449 }));
+                stage.insert(new Q.Enemy({ x: 160, y: 449 }));
+                stage.insert(new Q.Enemy({ x: 234, y: 513 }));
+                stage.insert(new Q.TowerPurple({ x: 158, y: 49}));
+
+              
+            });
+
+            Q.scene('toLevel3',function(stage) {
+                var container = stage.insert(new Q.UI.Container({
+                    x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"
+                }));
+
+                var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",
+                                                  label: "Go to Level 3" }))         
+                var label = container.insert(new Q.UI.Text({x:10, y: -10 - button.p.h, 
+                                                   label: stage.options.label }));
+                // When the button is clicked, clear all the stages
+                // and restart the game.
+                button.on("click",function() {
+                    Q.clearStages();
+                    Q.stageScene('level3');
+                });
+  
+                // Expand the container to visibily fit it's contents
+                container.fit(20);
+            });
+
+            //LEVEL 3
+            Q.scene("level3",function(stage) {          
+                var background = new Q.TileLayer({ dataAsset: 'level3.tmx', layerIndex: 0, sheet: 'tiles', tileW: 32, tileH: 32, type: Q.SPRITE_NONE });
+                stage.insert(background);   
+                stage.collisionLayer(new Q.TileLayer({ dataAsset: 'level3.tmx', layerIndex:1,  sheet: 'tiles', tileW: 32, tileH: 32 })); 
+
+                var player = stage.insert(new Q.Player({x: 63, y: 33}));
+                stage.add("viewport").follow(background);
+                
+                stage.insert(new Q.TowerRed({ x: 750, y: 288}));
+            });
+
+            // To display a game over / game won popup box, 
+            // create a endGame scene that takes in a `label` option
+            // to control the displayed message.
+            Q.scene('endGame',function(stage) {
+                var container = stage.insert(new Q.UI.Container({
+                    x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"
+                }));
+
+                var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",
+                                                  label: "Play again" }))         
+                var label = container.insert(new Q.UI.Text({x:10, y: -10 - button.p.h, 
+                                                   label: stage.options.label }));
+                // When the button is clicked, clear all the stages
+                // and restart the game.
+                button.on("click",function() {
+                    Q.clearStages();
+                    Q.stageScene('level1');
+                });
+  
+                // Expand the container to visibily fit it's contents
+                container.fit(20);
+            });
+
+
+
+        </script>
+    </body>
+</html>
