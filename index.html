@@ -34,6 +34,7 @@
                                 Q.stageScene("toLevel2",1, { label: "You won!" }); 
                                 // Remove the player to prevent them from moving
                                 this.destroy();
+                                collision.obj.destroy();
 
                             }
                             if(collision.obj.isA("TowerPurple")) {
@@ -41,6 +42,7 @@
                                 Q.stageScene("toLevel3",1, { label: "You won" }); 
                                 // Remove the player to prevent them from moving
                                 this.destroy();
+                                collision.obj.destroy();
 
                             }
                     });    
