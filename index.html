@@ -11,15 +11,18 @@
         <script src='lib/quintus_2d.js'></script>
         <script src='lib/quintus_touch.js'></script>
         <script src='lib/quintus_ui.js'></script>
+        <script src='lib/quintus_audio.js'></script>
     </head>
     <body style="background-color: black;">
         <script>
             var Q = Quintus()
-                .include("Sprites, Scenes, Input, 2D, Touch, UI")
+                .include("Sprites, Scenes, Input, 2D, Touch, UI, Audio")
                 .setup({
                     maximize: true,
                     scaleToFit: true
-                }).controls().touch(); 
+                }).controls().touch();
+
+                Q.enableSound(); 
 
             //Class player
             Q.Sprite.extend("Player",{
@@ -67,6 +70,7 @@
                            if(collision.obj.isA("Player")) { 
                                 this.destroy();
                                 collision.obj.p.vy = -300;
+                                Q.audio.play('hit.mp3')
                             }
                      });
                  }
@@ -94,7 +98,7 @@
 
             //load assets and staging first level
             Q.load("tiles.png, player.png, enemy.png, tower.png, towerPurple.png, towerRed.png, level1.tmx, level2.tmx, level3.tmx", function() {
-                Q.sheet("tiles","tiles.png", { tilew: 32, tileh: 32});          
+                Q.sheet("tiles","tiles.png, hit.mp3", { tilew: 32, tileh: 32});          
                 Q.stageScene("level1");
             });
 
