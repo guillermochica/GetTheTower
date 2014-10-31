@@ -48,6 +48,13 @@
                                 collision.obj.destroy();
 
                             }
+                            if(collision.obj.isA("TowerRed")) {
+                                // Stage the endGame scene above the current stage
+                                Q.stageScene("toLevel4",1, { label: "You won" }); 
+                                // Remove the player to prevent them from moving
+                                this.destroy();
+                                collision.obj.destroy();
+                            }
                     });    
                 }
             });
@@ -94,11 +101,16 @@
                     this._super(p, {asset: "towerRed.png"});
                 }
             });
+            Q.Sprite.extend("TowerBlue", {
+                init: function(p) {
+                    this._super(p, {asset: "towerBlue.png"});
+                }
+            });
 
 
             //load assets and staging first level
-            Q.load("tiles.png, player.png, enemy.png, tower.png, towerPurple.png, towerRed.png, level1.tmx, level2.tmx, level3.tmx", function() {
-                Q.sheet("tiles","tiles.png, hit.mp3", { tilew: 32, tileh: 32});          
+            Q.load("tiles.png, player.png, enemy.png, tower.png, towerPurple.png, towerRed.png, towerBlue.png, level1.tmx, level2.tmx, level3.tmx, level4.tmx, hit.mp3", function() {
+                Q.sheet("tiles","tiles.png", { tilew: 32, tileh: 32});          
                 Q.stageScene("level1");
             });
 
@@ -197,6 +209,45 @@
                 stage.add("viewport").follow(background);
                 
                 stage.insert(new Q.TowerRed({ x: 750, y: 288}));
+            });
+
+            Q.scene('toLevel4',function(stage) {
+                var container = stage.insert(new Q.UI.Container({
+                    x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"
+                }));
+
+                var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",
+                                                  label: "Go to Level 4" }))         
+                var label = container.insert(new Q.UI.Text({x:10, y: -10 - button.p.h, 
+                                                   label: stage.options.label }));
+                // When the button is clicked, clear all the stages
+                // and restart the game.
+                button.on("click",function() {
+                    Q.clearStages();
+                    Q.stageScene('level4');
+                });
+  
+                // Expand the container to visibily fit it's contents
+                container.fit(20);
+            });
+
+            Q.scene('level4',function(stage) {          
+                stage.insert(new Q.Repeater({ asset: "background-wall.png", speedX: 0.5, speedY: 0.5 }));  
+                var background = new Q.TileLayer({ dataAsset: 'level4.tmx', layerIndex: 0, sheet: 'tiles', tileW: 32, tileH: 32, type: Q.SPRITE_NONE });
+                stage.insert(background);
+               // var background = new Q.TileLayer( {dataAsset: 'level4.tmx', layerIndex: 0, sheet: 'tiles', tileW: 32, tileH: 32, type: Q.SPRITE_NONE });
+                //stage.insert(background);   
+                stage.collisionLayer(new Q.TileLayer({ dataAsset: 'level4.tmx', layerIndex:1,  sheet: 'tiles', tileW: 32, tileH: 32 })); 
+
+
+                var player = stage.insert(new Q.Player({x: 177, y: 129}));
+                stage.add("viewport").follow(player,{x: true, y: true},{minX: 0, maxX: background.p.w, minY: 0, maxY: background.p.h});
+
+                stage.insert(new Q.Enemy({ x: 1070, y: 417 }));
+
+               
+                stage.insert(new Q.TowerBlue({ x: 2192, y: 594}));
+                
             });
 
             // To display a game over / game won popup box, 
